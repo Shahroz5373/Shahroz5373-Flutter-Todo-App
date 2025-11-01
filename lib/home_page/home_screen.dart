@@ -1,8 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:todo_list/add_todo_task//add_todo.dart';
-import 'package:todo_list/hive_db//hive_db.dart';
+import 'package:todo_list/add_todo_task/add_todo.dart';
+import 'package:todo_list/hive_db/hive_db.dart';
 import 'package:todo_list/todo_widgets/todo.dart';
 import 'package:todo_list/todo_widgets/todo_tile.dart';
 
@@ -19,26 +18,35 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    todoBox = Hive.box<Data>('todoBox');
+    _openBox();
   }
 
-  //  Delete a specific todo from Hive
+  Future<void> _openBox() async {
+    todoBox = await Hive.openBox<Data>('todoBox');
+    setState(() {});
+  }
+
+  // Delete a specific todo from Hive
   void _deleteTodoAt(int index) {
     todoBox.deleteAt(index);
     setState(() {});
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Todo deleted ❌')));
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Todo deleted ❌')));
+    }
   }
 
-  //  Complete a todo → also remove from Hive
+  // Complete a todo → also remove from Hive
   void _completeTodoAt(int index) {
     todoBox.deleteAt(index);
     setState(() {});
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Todo completed ✔')));
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Todo completed ✔')));
+    }
   }
 
-  //  Convert stored String → Priority enum
+  // Convert stored String → Priority enum
   Priority _convertStringToPriority(String? priority) {
     switch (priority) {
       case 'urgent':
@@ -52,17 +60,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  //  Navigate to AddTodo screen
+  // Navigate to AddTodo screen
   void _navigateToAddTodo() {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const AddTodo()),
     ).then((_) {
-      setState(() {}); // refresh on return
+      if (mounted) {
+        setState(() {}); // refresh on return
+      }
     });
   }
 
-  //  Show Confirmation Dialog to Clear All Todos
+  // Show Confirmation Dialog to Clear All Todos
   void _clearAllTodos() {
     if (todoBox.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -83,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () {
-              todoBox.clear(); //  Deletes all from Hive
+              todoBox.clear(); // Deletes all from Hive
               setState(() {});
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -104,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Todo List'),
         centerTitle: true,
         actions: [
-          //  Button to Clear All Todos
+          // Button to Clear All Todos
           IconButton(
             icon: const Icon(Icons.delete_forever),
             tooltip: "Delete All Todos",
@@ -124,7 +134,8 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const BouncingScrollPhysics(),
         itemCount: todoBox.length,
         itemBuilder: (context, index) {
-          final data = todoBox.getAt(index)!;
+          final data = todoBox.getAt(index);
+          if (data == null) return const SizedBox();
 
           final todo = Todo(
             title: data.title ?? "Untitled",
@@ -144,10 +155,10 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  //  Dismissible TodoTile with Swipe Actions
+  // Dismissible TodoTile with Swipe Actions
   Widget _buildDismissibleTile(Todo todo, int index) {
     return Dismissible(
-      key: Key(todo.title + index.toString()),
+      key: Key('${todo.title}$index'),
       background: Container(
         color: Colors.green,
         alignment: Alignment.centerLeft,
@@ -160,11 +171,13 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.only(right: 20),
         child: const Icon(Icons.delete, color: Colors.white),
       ),
-      onDismissed: (direction) {
+      confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
           _completeTodoAt(index);
+          return false; // Don't dismiss since we're handling it
         } else {
           _deleteTodoAt(index);
+          return false; // Don't dismiss since we're handling it
         }
       },
       child: TodoTile(todo: todo),

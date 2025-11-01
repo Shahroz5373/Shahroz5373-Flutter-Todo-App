@@ -1,9 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:todo_list/hive_db//hive_db.dart';
-import 'package:todo_list/todo_widgets//todo.dart';
-
+import 'package:todo_list/hive_db/hive_db.dart';
+import 'package:todo_list/todo_widgets/todo.dart';
 
 class AddTodo extends StatefulWidget {
   const AddTodo({super.key});
@@ -42,21 +40,27 @@ class _AddTodoState extends State<AddTodo> {
         await box.add(newTodo);
 
         // 4) Show a confirmation SnackBar
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Todo Added: $title")),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Todo Added: $title")),
+          );
+        }
 
         // 5) Clear fields
         _titleController.clear();
         _descriptionController.clear();
         setState(() => _priority = Priority.low);
 
-        // 6) Go back to HomeScreen (optional, but expected behavior)
-        Navigator.pop(context);
+        // 6) Go back to HomeScreen
+        if (mounted) {
+          Navigator.pop(context);
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error saving todo: $e")),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error saving todo: $e")),
+          );
+        }
       }
     }
   }
@@ -79,13 +83,13 @@ class _AddTodoState extends State<AddTodo> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              InputField("Title", _titleController, len: 20, lines: 1),
+              _buildInputField("Title", _titleController, len: 20, lines: 1),
               const SizedBox(height: 20),
 
-              InputField("Description", _descriptionController, len: 60, lines: 2),
+              _buildInputField("Description", _descriptionController, len: 60, lines: 2),
               const SizedBox(height: 20),
 
-              DropdownButtonFormField(
+              DropdownButtonFormField<Priority>(
                 value: _priority,
                 decoration: InputDecoration(
                   labelText: 'Priority',
@@ -99,7 +103,7 @@ class _AddTodoState extends State<AddTodo> {
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
-                  border: OutlineInputBorder(),
+                  border: const OutlineInputBorder(),
                   enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.blue.shade300),
                     borderRadius: BorderRadius.circular(12.0),
@@ -116,7 +120,7 @@ class _AddTodoState extends State<AddTodo> {
                 dropdownColor: Colors.blue.shade50,
                 icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
                 items: Priority.values.map((p) {
-                  return DropdownMenuItem(
+                  return DropdownMenuItem<Priority>(
                     value: p,
                     child: Text(
                       p.title,
@@ -127,7 +131,11 @@ class _AddTodoState extends State<AddTodo> {
                     ),
                   );
                 }).toList(),
-                onChanged: (value) => setState(() => _priority = value!),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() => _priority = value);
+                  }
+                },
               ),
 
               const SizedBox(height: 20),
@@ -143,7 +151,7 @@ class _AddTodoState extends State<AddTodo> {
     );
   }
 
-  TextFormField InputField(String val, TextEditingController controller,
+  TextFormField _buildInputField(String val, TextEditingController controller,
       {int len = 1, int lines = 1}) {
     return TextFormField(
       controller: controller,
@@ -167,7 +175,7 @@ class _AddTodoState extends State<AddTodo> {
           icon: const Icon(Icons.clear),
           onPressed: () => controller.clear(),
         ),
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(color: Colors.blue.shade300),
           borderRadius: BorderRadius.circular(12.0),
