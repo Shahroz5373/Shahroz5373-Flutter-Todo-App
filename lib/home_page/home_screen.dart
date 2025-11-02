@@ -21,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _openBox();
   }
 
+  //opens the box to save data
   Future<void> _openBox() async {
     todoBox = await Hive.openBox<Data>('todoBox');
     setState(() {});
@@ -32,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
     if (mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Todo deleted ❌')));
+          .showSnackBar(const SnackBar(content: Text('Todo deleted ')));
     }
   }
 
@@ -42,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
     if (mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Todo completed ✔')));
+          .showSnackBar(const SnackBar(content: Text('Todo completed ')));
     }
   }
 

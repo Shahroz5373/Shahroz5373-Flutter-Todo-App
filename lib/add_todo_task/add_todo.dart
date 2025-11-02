@@ -16,7 +16,7 @@ class _AddTodoState extends State<AddTodo> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  /// Converts Priority enum to simple string (like 'urgent', 'high', etc.)
+  /// Converts Priority enum to simple string
   String convertPriorityToString(Priority p) => p.title;
 
   /// Saves a todo into Hive and then returns to HomeScreen
