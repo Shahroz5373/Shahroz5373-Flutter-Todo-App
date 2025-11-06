@@ -4,7 +4,7 @@ import 'package:todo_list/add_todo_task/add_todo.dart';
 import 'package:todo_list/hive_db/hive_db.dart';
 import 'package:todo_list/todo_widgets/todo.dart';
 import 'package:todo_list/todo_widgets/todo_tile.dart';
-
+enum TodoAction { completed, deleted }
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -27,24 +27,22 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {});
   }
 
-  // Delete a specific todo from Hive
-  void _deleteTodoAt(int index) {
-    todoBox.deleteAt(index);
-    setState(() {});
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Todo deleted ')));
-    }
-  }
+
 
   // Complete a todo → also remove from Hive
-  void _completeTodoAt(int index) {
+  void _finishTodoAt(int index,TodoAction action){
     todoBox.deleteAt(index);
     setState(() {});
-    if (mounted) {
+    if (mounted){
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Todo completed ')));
+          .showSnackBar(
+        SnackBar(content: Text(
+          action == TodoAction.completed ?'Todo Completed':'Todo Deleted'
+        ))
+        );
     }
+
+
   }
 
   // Convert stored String → Priority enum
@@ -132,7 +130,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       )
           : ListView.builder(
-        physics: const BouncingScrollPhysics(),
+        physics:  BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         itemCount: todoBox.length,
         itemBuilder: (context, index) {
           final data = todoBox.getAt(index);
@@ -174,10 +174,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          _completeTodoAt(index);
+          _finishTodoAt(index, TodoAction.completed);
           return false; // Don't dismiss since we're handling it
         } else {
-          _deleteTodoAt(index);
+          _finishTodoAt(index, TodoAction.deleted);
           return false; // Don't dismiss since we're handling it
         }
       },
